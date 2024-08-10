@@ -1,7 +1,3 @@
-
-alert('Bienvenido a la tienda');
-
-
 const relojes = [
   { id: 1, nombre: 'Naviforce 9163', precio: 3000 },
   { id: 2, nombre: 'Naviforce 8045', precio: 2500 },
@@ -11,23 +7,31 @@ const relojes = [
 ];
 
 
-function mostrarMenu(relojes) {
-  let menu = 'Relojes disponibles:\n';
-  relojes.forEach(reloj => {
-    menu += `${reloj.id}. ${reloj.nombre} - $${reloj.precio}\n`;
-  });
-  menu += '\n1. Filtrar por precio (más caro a más barato)\n';
-  menu += '2. Filtrar por precio (más barato a más caro)\n';
-  menu += '3. Agregar reloj al carrito\n';
-  menu += '4. Finalizar compra\n';
-  return menu;
+if (!localStorage.getItem('relojes')) {
+  localStorage.setItem('relojes', JSON.stringify(relojes));
 }
 
 
-const carrito = [];
+const relojesStorage = JSON.parse(localStorage.getItem('relojes'));
+
+let carrito = [];
+
+
+function mostrarMenu(relojes) {
+  const relojesDiv = document.querySelector('.relojes');
+  relojesDiv.innerHTML = '';
+
+  relojes.forEach(reloj => {
+    const relojDiv = document.createElement('div');
+    relojDiv.innerHTML = `<p>${reloj.id}. ${reloj.nombre} - $${reloj.precio}</p>
+                          <button onclick="agregarAlCarrito(${reloj.id})" class="btn">Agregar al carrito</button>`;
+    relojesDiv.appendChild(relojDiv);
+  });
+}
+
 
 function agregarAlCarrito(id) {
-  const reloj = relojes.find(r => r.id === id);
+  const reloj = relojesStorage.find(r => r.id === id);
   if (reloj) {
     carrito.push(reloj);
     alert(`Agregaste ${reloj.nombre} al carrito.`);
@@ -36,57 +40,43 @@ function agregarAlCarrito(id) {
   }
 }
 
+
 function filtrarRelojes(opcion) {
   let relojesFiltrados = [];
-  if (opcion === '1') {
-    relojesFiltrados = relojes.slice().sort((a, b) => b.precio - a.precio);
-  } else if (opcion === '2') {
-    relojesFiltrados = relojes.slice().sort((a, b) => a.precio - b.precio);
+  if (opcion === 'caros') {
+    relojesFiltrados = relojesStorage.slice().sort((a, b) => b.precio - a.precio);
+  } else if (opcion === 'baratos') {
+    relojesFiltrados = relojesStorage.slice().sort((a, b) => a.precio - b.precio);
   }
-  alert(mostrarMenu(relojesFiltrados));
+  mostrarMenu(relojesFiltrados);
 }
+
 
 function finalizarCompra() {
   if (carrito.length === 0) {
     alert('No agregaste nada...');
     return;
   }
-  
+
   let resumen = 'Artículos en tu carrito:\n';
   let total = 0;
-  
+
   carrito.forEach(reloj => {
     resumen += `${reloj.nombre} - $${reloj.precio}\n`;
     total += reloj.precio;
   });
-  
+
   resumen += `\nTotal a pagar: $${total}`;
   
   alert(resumen);
   alert('Gracias por su compra');
+  carrito = []; 
 }
 
 
-let opcion;
-do {
-  opcion = prompt(mostrarMenu(relojes));
-  switch (opcion) {
-    case '1':
-    case '2':
-      filtrarRelojes(opcion);
-      break;
-    case '3':
-      const id = parseInt(prompt('Ingresa el numero del modelo que desa /1 /2 /3 /4 /5:'));
-      agregarAlCarrito(id);
-      break;
-    case '4':
-      finalizarCompra();
-      break;
-    default:
-      if (opcion !== null) {
-        alert('No exiiste');
-      }
-  }
-} while (opcion !== null);
+document.querySelector('.filtrarCaros').addEventListener('click', () => filtrarRelojes('caros'));
+document.querySelector('.filtrarBaratos').addEventListener('click', () => filtrarRelojes('baratos'));
+document.querySelector('.finalizarCompra').addEventListener('click', finalizarCompra);
 
-alert('Gracias por visitar la tienda, vuelve pronto');
+
+mostrarMenu(relojesStorage);
